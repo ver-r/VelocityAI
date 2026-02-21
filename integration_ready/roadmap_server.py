@@ -15,7 +15,7 @@ from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
 
 # ── CONFIG ──────────────────────────────────────────────────────────────────
-REPO_PATH = r"C:\Users\naeva\OneDrive\Desktop\Makeathon 2026\developer-roadmap"
+REPO_PATH = r"D:\velocity\integration_ready\developer-roadmap"
 PORT      = 5050
 # ────────────────────────────────────────────────────────────────────────────
 
@@ -33,9 +33,9 @@ ROLE_TO_FOLDER = {
     "cloud solutions architect":         "aws",
     "software engineer":                 "backend",
     "data analyst":                      "data-analyst",
-    "business intelligence analyst":     "data-analyst",
+    "business intelligence analyst":     "bi-analyst",
     "data scientist":                    "ai-data-scientist",
-    "machine learning engineer":         "mlops",
+    "machine learning engineer":         "machine-learning",
     "mlops engineer":                    "mlops",
     "artificial intelligence engineer":  "ai-engineer",
     "cybersecurity analyst":             "cyber-security",

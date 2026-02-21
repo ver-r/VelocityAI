@@ -26,7 +26,19 @@ export default function Overview() {
     readiness = 0,
     role = "Unknown role",
     skills = [],
+    aiInsights,
   } = data;
+
+  /* ✅ ROADMAP REDIRECT FUNCTION */
+  const openRoadmap = (roleName) => {
+    const known = encodeURIComponent(skills.join(","));
+    const roleParam = encodeURIComponent(roleName);
+
+    window.open(
+      `http://localhost:5050/viewer?role=${roleParam}&known=${known}`,
+      "_blank"
+    );
+  };
 
   const resilienceLabel =
     readiness >= 75
@@ -70,12 +82,56 @@ export default function Overview() {
         </div>
       </div>
 
-      <div style={{ marginTop: "3.5rem" }}>
-        <h3>Next improvement areas</h3>
-        <Weak title="System Design" />
-        <Weak title="Cloud Architecture" />
-        <Weak title="Distributed Systems" />
-      </div>
+      {/* 🔥 CLICKABLE AI ROLE MATCHES */}
+      {aiInsights?.matched_roles?.length > 0 && (
+        <div style={{ marginTop: "3.5rem" }}>
+          <h3>AI-recommended career paths</h3>
+
+          <div style={{ marginTop: "1.5rem", display: "grid", gap: "1rem" }}>
+            {aiInsights.matched_roles.slice(0, 5).map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  ...card,
+                  cursor: "pointer",
+                  transition: "transform .15s ease",
+                }}
+                onClick={() => openRoadmap(item.role)}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.transform = "translateY(-2px)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "none")
+                }
+              >
+                <h4>{item.role}</h4>
+                <p style={muted}>
+                  Match confidence: {(item.similarity_score * 100).toFixed(1)}%
+                </p>
+                <p style={{ marginTop: "0.5rem", color: "#60A5FA" }}>
+                  View learning roadmap →
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 🔥 SKILL RISK SECTION */}
+      {aiInsights?.skill_decline_risk?.length > 0 && (
+        <div style={{ marginTop: "3.5rem" }}>
+          <h3>Skill decline risk (AI)</h3>
+
+          {aiInsights.skill_decline_risk.slice(0, 5).map((risk, i) => (
+            <div key={i} style={weak}>
+              <strong>{risk.skill}</strong>
+              <p style={muted}>
+                Risk: {(risk.decline_risk_probability * 100).toFixed(1)}%
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div style={ctaWrap}>
         <button style={cta}>
@@ -94,10 +150,6 @@ function Pill({ title }) {
       <strong>{title}</strong>
     </div>
   );
-}
-
-function Weak({ title }) {
-  return <div style={weak}>{title}</div>;
 }
 
 /* ===== STYLES ===== */
@@ -132,10 +184,12 @@ const grid = {
 };
 
 const card = {
-  padding: "2rem",
-  borderRadius: "20px",
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  padding: "2.2rem",
+  borderRadius: "22px",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+  border: "1px solid rgba(255,255,255,0.12)",
+  boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
 };
 
 const ring = {
@@ -160,9 +214,10 @@ const pill = {
 
 const weak = {
   marginTop: "1rem",
-  padding: "1rem",
-  borderRadius: "14px",
-  border: "1px solid rgba(245,158,11,0.5)",
+  padding: "1.1rem 1.2rem",
+  borderRadius: "16px",
+  border: "1px solid rgba(245,158,11,0.4)",
+  background: "rgba(245,158,11,0.08)",
 };
 
 const ctaWrap = {
@@ -172,10 +227,11 @@ const ctaWrap = {
 };
 
 const cta = {
-  padding: "0.9rem 2.4rem",
+  padding: "0.95rem 2.6rem",
   borderRadius: "999px",
   fontWeight: 600,
   background: "linear-gradient(135deg,#3B82F6,#10B981)",
   border: "none",
   cursor: "pointer",
+  boxShadow: "0 12px 40px rgba(59,130,246,0.45)",
 };

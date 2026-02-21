@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import joblib
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -15,11 +16,18 @@ from sklearn.metrics.pairwise import cosine_similarity
 # CONFIG
 # ==========================================
 
-EMBEDDINGS_FILE = r"E:\VelocityAI\ai\role_skill_embeddings.npy"
-MAPPING_FILE =r"E:\VelocityAI\ai\embedding_index_mapping.csv"
-ENGINEERED_FEATURES_FILE = r"E:\VelocityAI\ai\engineered_features.csv"
-MODEL_FILE = r"E:\VelocityAI\ai\skill_decline_risk_model.pkl"
-SCALER_FILE = r"E:\VelocityAI\ai\skill_scaler.pkl"
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+EMBEDDINGS_FILE = BASE_DIR / "role_skill_embeddings.npy"
+
+embeddings = np.load(EMBEDDINGS_FILE)
+
+
+MAPPING_FILE = BASE_DIR / "embedding_index_mapping.csv"
+ENGINEERED_FEATURES_FILE = BASE_DIR / "engineered_features.csv"
+MODEL_FILE = BASE_DIR / "skill_decline_risk_model.pkl"
+SCALER_FILE = BASE_DIR / "skill_scaler.pkl"
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 TOP_K = 5
@@ -50,6 +58,14 @@ print("System Ready ✅")
 # ==========================================
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # later restrict to backend service
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ==========================================
 # REQUEST FORMAT
@@ -144,3 +160,7 @@ def analyze(user_input: UserInput):
         "matched_roles": roles_output,
         "skill_decline_risk": skill_risk_output
     }
+
+@app.get("/health")
+def health():
+    return {"status": "AI service running 🚀"}

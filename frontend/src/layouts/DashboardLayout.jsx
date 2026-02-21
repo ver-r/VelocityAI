@@ -66,13 +66,14 @@ function NavItem({ to, children }) {
   );
 }
 
-/* STYLES */
+// /* STYLES */
 
 const wrapper = {
   display: "flex",
   minHeight: "100vh",
   background: "#0b0f19",
   color: "white",
+  // overflow: "hidden",
 };
 
 const sidebar = {
@@ -82,6 +83,9 @@ const sidebar = {
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
+  position: "sticky",
+  top: 0,
+  height: "100vh",
 };
 
 const profile = {
@@ -100,6 +104,7 @@ const avatar = {
   alignItems: "center",
   justifyContent: "center",
   fontWeight: 700,
+  boxShadow: "0 0 0 3px rgba(59,130,246,0.25)",
 };
 
 const name = { fontWeight: 600 };
@@ -108,7 +113,7 @@ const subtext = { fontSize: "0.8rem", color: "#9CA3AF" };
 const nav = {
   display: "flex",
   flexDirection: "column",
-  gap: "0.75rem",
+  gap: "0.6rem",
 };
 
 const content = {
