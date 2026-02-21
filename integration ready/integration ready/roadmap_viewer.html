@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Roadmap Viewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:       #0d1117;
+  --surface:  #161b22;
+  --surface2: #21262d;
+  --border:   #30363d;
+  --border2:  #3d444d;
+  --text:     #e6edf3;
+  --muted:    #848d97;
+
+  --t-bg:     #1a1f35;
+  --t-border: #4f6ef7;
+  --t-text:   #a5b4fc;
+
+  --s-bg:     #0d2a2a;
+  --s-border: #2dd4bf;
+  --s-text:   #99f6e4;
+
+  --k-bg:     #2a1018;
+  --k-border: #f87171;
+  --k-text:   #fca5a5;
+
+  --r: 7px;
+  --f: 'Inter', system-ui, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--f);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── TOPBAR ── */
+#topbar {
+  position: sticky; top: 0; z-index: 200;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 14px;
+  user-select: none;
+}
+.logo { font-weight: 700; font-size: 15px; letter-spacing: -.03em; color: var(--text); }
+.logo em { font-style: normal; color: var(--muted); font-weight: 400; }
+#topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.badge {
+  font-size: 12px; font-weight: 600; padding: 4px 12px;
+  border-radius: 20px; cursor: default; white-space: nowrap;
+}
+.badge.primary { background: #4f6ef7; color: #fff; }
+.badge.outline { background: transparent; border: 1px solid var(--border2); color: var(--muted); font-weight: 500; }
+.badge.danger  { background: transparent; border: 1px solid #f87171; color: #f87171; font-weight: 500; }
+
+/* ── DIAGRAM WRAPPER ── */
+/* Normal page scroll — canvas scales to fit window width, height scrolls naturally */
+#diagram-outer {
+  width: 100%;
+  overflow-x: hidden;
+  padding: 36px 0 80px;
+}
+#canvas-wrap {
+  position: relative;
+  /* width + height set by JS; transform scale applied so it fits viewport width */
+  transform-origin: top left;
+  /* centred with margin auto on a scaled element requires wrapper trick */
+}
+#diagram-scaler {
+  /* This div's width matches the SCALED canvas width so the page knows how tall to be */
+  overflow: hidden;
+}
+
+/* ── SVG EDGES ── */
+#edges-svg {
+  position: absolute; top: 0; left: 0;
+  pointer-events: none; overflow: visible;
+}
+
+/* ── NODES ── */
+.node {
+  position: absolute;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+  font-size: 13px; font-weight: 500;
+  border-radius: var(--r);
+  padding: 0 14px;
+  line-height: 1.35;
+  user-select: none;
+  white-space: nowrap;
+}
+.node.topic    { background: var(--t-bg); border: 1.5px solid var(--t-border); color: var(--t-text); font-weight: 600; }
+.node.subtopic { background: var(--s-bg); border: 1.5px solid var(--s-border); color: var(--s-text); font-size: 12.5px; }
+
+.node.clickable { cursor: pointer; transition: box-shadow .12s, transform .12s; }
+.node.clickable:hover { box-shadow: 0 0 0 2px var(--t-border), 0 6px 20px rgba(79,110,247,.25); transform: translateY(-1px); z-index: 20 !important; }
+.node.subtopic.clickable:hover { box-shadow: 0 0 0 2px var(--s-border), 0 6px 20px rgba(45,212,191,.2); }
+
+.node.skipped {
+  background: var(--k-bg) !important;
+  border: 1.5px solid var(--k-border) !important;
+  color: var(--k-text) !important;
+  cursor: pointer !important;
+}
+
+.node.skipped::after {
+  content: '✓ known';
+  position: absolute; bottom: 1px; right: 5px;
+  font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: #f87171; opacity: .7;
+}
+
+.node.skipped-child {
+  background: #1f0c10 !important;
+  border: 1.5px dashed #f87171 !important;
+  color: #fca5a5 !important;
+  opacity: .8;
+  cursor: pointer !important;
+}
+
+.node.topic:not(.clickable):not(.skipped):not(.skipped-child),
+.node.subtopic:not(.clickable):not(.skipped):not(.skipped-child) { opacity: .6; }
+
+/* ── MODAL ── */
+/* Completely isolated from any transform context */
+#modal-root {
+  position: fixed; inset: 0;
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  /* visibility controlled by .open class — NOT pointer-events on children */
+  visibility: hidden;
+}
+#modal-root.open { visibility: visible; }
+
+#m-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(6px);
+  opacity: 0; transition: opacity .2s;
+  cursor: pointer;
+}
+#modal-root.open #m-overlay { opacity: 1; }
+
+#m-box {
+  position: relative; z-index: 1;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  width: min(700px, 92vw);
+  max-height: 82vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 40px 80px rgba(0,0,0,.6);
+  transform: translateY(20px) scale(.97);
+  transition: transform .2s;
+  overflow: hidden;
+}
+#modal-root.open #m-box { transform: none; }
+
+#m-head {
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 12px;
+  flex-shrink: 0;
+}
+#m-meta { flex: 1; min-width: 0; }
+#m-type {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 4px;
+}
+#m-title { font-size: 20px; font-weight: 700; letter-spacing: -.025em; color: var(--text); line-height: 1.2; }
+
+#m-close {
+  flex-shrink: 0;
+  width: 30px; height: 30px; margin-top: 2px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--muted); font-size: 20px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s, color .12s;
+  /* ensure pointer events always work regardless of parent state */
+  pointer-events: all;
+}
+#m-close:hover { background: var(--border2); color: var(--text); }
+
+#m-body {
+  padding: 22px; overflow-y: auto; flex: 1;
+  font-size: 14px; line-height: 1.75; color: #adbac7;
+}
+#m-body h1,#m-body h2,#m-body h3 { font-weight:700;letter-spacing:-.02em;margin:18px 0 8px;color:var(--text) }
+#m-body h1{font-size:19px}
+#m-body h2{font-size:16px;border-bottom:1px solid var(--border);padding-bottom:5px}
+#m-body h3{font-size:13px;color:var(--muted)}
+#m-body p{margin-bottom:13px}
+#m-body a{color:#4f6ef7;text-decoration:none;border-bottom:1px solid #4f6ef750}
+#m-body a:hover{color:#818cf8;border-color:#818cf8}
+#m-body code{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:12.5px;font-family:monospace;color:#f472b6}
+#m-body pre{background:#090d12;border:1px solid var(--border);border-radius:9px;padding:16px;overflow-x:auto;margin-bottom:14px}
+#m-body pre code{background:none;border:none;color:#adbac7;font-size:13px}
+#m-body ul,#m-body ol{padding-left:20px;margin-bottom:13px}
+#m-body li{margin-bottom:5px}
+#m-body blockquote{border-left:3px solid #4f6ef7;padding:10px 16px;background:var(--surface2);margin-bottom:13px;border-radius:0 6px 6px 0;color:var(--muted)}
+#m-body hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+.no-content{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+
+/* loading / error */
+#loading { text-align:center;padding:100px 24px;color:var(--muted);font-size:14px; }
+#err-msg {
+  display:none; margin:32px auto; max-width:560px;
+  background:#2a1018;border:1px solid #f87171;border-radius:10px;
+  padding:20px;color:#fca5a5;font-size:13px;
+}
+#err-msg strong{display:block;margin-bottom:8px;color:#f87171}
+#err-msg code{font-size:12px;background:#1f0c10;padding:1px 6px;border-radius:3px}
+
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo"><em>Front End Developer Roadmap</em></div>
+  <div id="topbar-right"></div>
+</div>
+
+<div id="diagram-outer">
+  <div id="diagram-scaler">
+    <div id="canvas-wrap">
+      <svg id="edges-svg"></svg>
+      <div id="nodes-layer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — completely outside diagram DOM, fixed to viewport -->
+<div id="modal-root">
+  <div id="m-overlay"></div>
+  <div id="m-box">
+    <div id="m-head">
+      <div id="m-meta">
+        <div id="m-type"></div>
+        <div id="m-title"></div>
+      </div>
+      <button id="m-close">×</button>
+    </div>
+    <div id="m-body"></div>
+  </div>
+</div>
+
+<div id="loading">Loading roadmap…</div>
+<div id="err-msg"></div>
+
+<script>
+// ── Read role + known skills from URL params ──────────────────────────────
+// Expected URL: /viewer?role=Front+End+Developer&known=HTML,CSS,JavaScript
+// Falls back to local roadmap_data.json if no params (original behaviour).
+
+const API_BASE = "";  // same origin as Flask server; change if needed
+
+const params  = new URLSearchParams(window.location.search);
+const urlRole = params.get("role")  || "";
+const urlKnown= params.get("known") || "";
+
+// Update topbar title immediately so it doesn't flash the old hardcoded value
+if (urlRole) {
+  document.querySelector(".logo em").textContent = urlRole + " Roadmap";
+}
+
+const HIDE_TYPES = new Set(["label","section","group","column","title","vertical","horizontal","divider","spacer","text","note","annotation"]);
+const SKIP_PHRASES = ["visit ","roadmap.sh","beginner friendly","check out","more detail","for more","https://","vertical node","horizontal node"];
+const isAnnotation = l => SKIP_PHRASES.some(p => l.toLowerCase().includes(p));
+
+/* ── INIT ── */
+async function init() {
+  let data;
+  try {
+    let r;
+    if (urlRole) {
+      // Fetch from Flask API with role + known skills
+      const qs = new URLSearchParams({ role: urlRole, known: urlKnown });
+      r = await fetch(`${API_BASE}/api/roadmap?${qs}`);
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+        throw new Error(err.error || `HTTP ${r.status}`);
+      }
+    } else {
+      // Fallback: load local roadmap_data.json (original behaviour)
+      r = await fetch("roadmap_data.json");
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    }
+    data = await r.json();
+  } catch(e) {
+    document.getElementById("loading").style.display = "none";
+    const el = document.getElementById("err-msg");
+    el.style.display = "block";
+    if (urlRole) {
+      el.innerHTML = `<strong>⚠ Could not load roadmap for "${esc(urlRole)}"</strong>${esc(e.message)}<br><br>Make sure <code>roadmap_server.py</code> is running and the role is supported.`;
+    } else {
+      el.innerHTML = `<strong>⚠ Cannot load roadmap_data.json</strong>${esc(e.message)}<br><br>Run <code>python parse_roadmap.py</code> and place <code>roadmap_data.json</code> next to this file.`;
+    }
+    return;
+  }
+  render(data);
+}
+
+/* ── RENDER ── */
+function render(data) {
+  document.getElementById("loading").style.display = "none";
+
+  const rawNodes = data.nodes || [];
+  const edges    = data.edges || [];
+
+  // Build connected set
+  const connectedIds = new Set();
+  edges.forEach(e => { connectedIds.add(e.source); connectedIds.add(e.target); });
+
+  // Filter annotation nodes
+  const nodes = rawNodes.filter(n => {
+    if (HIDE_TYPES.has(n.type))  return false;
+    if (isAnnotation(n.label))   return false;
+    if (!connectedIds.has(n.id) && n.label.length > 35) return false;
+    return true;
+  });
+
+  const byId = {};
+  nodes.forEach(n => byId[n.id] = n);
+
+  // Find skipped-child nodes via BFS
+  const skippedIds   = new Set(nodes.filter(n => n.skipped).map(n => n.id));
+  const skipChildIds = new Set();
+  const childrenOf   = {};
+  edges.forEach(e => {
+    if (!byId[e.source] || !byId[e.target]) return;
+    (childrenOf[e.source] = childrenOf[e.source] || []).push(e.target);
+  });
+  skippedIds.forEach(sid => {
+    const q = [sid];
+    while (q.length) {
+      const cur = q.shift();
+      (childrenOf[cur] || []).forEach(cid => {
+        if (!skippedIds.has(cid) && !skipChildIds.has(cid) && byId[cid]) {
+          skipChildIds.add(cid);
+          q.push(cid);
+        }
+      });
+    }
+  });
+
+  // Topbar stats
+  const toLearn = nodes.filter(n => !n.skipped && !skipChildIds.has(n.id) && (n.content||"").trim().length > 20);
+  const known   = nodes.filter(n => n.skipped);
+  const displayRole = data.role || cap(data.folder || "");
+  document.querySelector(".logo em").textContent = displayRole + " Roadmap";
+  document.getElementById("topbar-right").innerHTML =
+    `<span class="badge primary">${toLearn.length} to learn</span>
+     ${known.length ? `<span class="badge danger">${known.length} known</span>` : ""}
+     <span class="badge outline">${displayRole}</span>`;
+
+  // Bounding box
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  nodes.forEach(n => {
+    minX=Math.min(minX,n.x); minY=Math.min(minY,n.y);
+    maxX=Math.max(maxX,n.x+n.w); maxY=Math.max(maxY,n.y+n.h);
+  });
+  const pad=60, cw=maxX-minX+pad*2, ch=maxY-minY+pad*2;
+  const ox=-minX+pad, oy=-minY+pad;
+
+  // Scale canvas to fit viewport width, then let page scroll vertically
+  const vpW = window.innerWidth;
+  const scale = Math.min(vpW / cw, 1);  // never upscale
+  const scaledH = ch * scale;
+
+  const wrap   = document.getElementById("canvas-wrap");
+  const scaler = document.getElementById("diagram-scaler");
+  wrap.style.width  = cw + "px";
+  wrap.style.height = ch + "px";
+  wrap.style.transform = `scale(${scale})`;
+  wrap.style.transformOrigin = "top left";
+  // Make the scaler the size of the SCALED content so the page scrolls correctly
+  scaler.style.width  = (cw * scale) + "px";
+  scaler.style.height = scaledH + "px";
+  scaler.style.margin = "0 auto";
+
+  const svg = document.getElementById("edges-svg");
+  svg.setAttribute("width", cw);
+  svg.setAttribute("height", ch);
+
+  const visIds = new Set(nodes.map(n => n.id));
+
+  // Draw edges
+  edges.forEach(e => {
+    if (!visIds.has(e.source) || !visIds.has(e.target)) return;
+    const s = byId[e.source], t = byId[e.target];
+    if (!s || !t) return;
+    const sx=s.x+s.w/2+ox, sy=s.y+s.h/2+oy;
+    const tx=t.x+t.w/2+ox, ty=t.y+t.h/2+oy;
+    const dx=tx-sx, dy=ty-sy;
+    const skipEdge = skippedIds.has(e.source)||skippedIds.has(e.target)||skipChildIds.has(e.source)||skipChildIds.has(e.target);
+    const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("d", `M${sx},${sy} C${sx+dx*.25},${sy+dy*.05} ${tx-dx*.25},${ty-dy*.05} ${tx},${ty}`);
+    p.setAttribute("fill","none");
+   p.setAttribute("stroke", skipEdge ? "#ef4444" : (e.dashed ? "#6b7280" : "#818cf8"));
+    p.setAttribute("stroke-width","2");
+    if (e.dashed || skipEdge) p.setAttribute("stroke-dasharray","5,4");
+    p.setAttribute("opacity", skipEdge ? "0.6" : "0.8");
+    svg.appendChild(p);
+  });
+
+  // Draw nodes
+  const layer = document.getElementById("nodes-layer");
+  nodes.forEach(n => {
+    const t = n.type || "topic";
+    const isSkipped   = n.skipped;
+    const isSkipChild = skipChildIds.has(n.id);
+    const hasContent  = (n.content||"").trim().length > 20;
+    const clickable = hasContent;
+
+    const div = document.createElement("div");
+    div.className = ["node", t,
+      isSkipped ? "skipped" : isSkipChild ? "skipped-child" : "",
+      clickable ? "clickable" : ""
+    ].filter(Boolean).join(" ");
+
+    div.textContent = n.label;
+    div.style.cssText = `left:${n.x+ox}px;top:${n.y+oy}px;width:${n.w}px;height:${n.h}px;z-index:${t==="subtopic"?1:2}`;
+
+    if (clickable) div.addEventListener("click", ev => { ev.stopPropagation(); openModal(n); });
+    layer.appendChild(div);
+  });
+}
+
+/* ── MODAL ── */
+// Wire up close button here so it's definitely attached after DOM ready
+document.getElementById("m-close").addEventListener("click", closeModal);
+document.getElementById("m-overlay").addEventListener("click", closeModal);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+function openModal(node) {
+  document.getElementById("m-type").textContent  = node.type || "topic";
+  document.getElementById("m-title").textContent = node.label;
+  const md = (node.content||"").trim();
+  document.getElementById("m-body").innerHTML = md.length > 10
+    ? (typeof marked !== "undefined" ? marked.parse(md) : `<pre style="white-space:pre-wrap">${esc(md)}</pre>`)
+    : `<div class="no-content">📭 No content available for this topic yet.</div>`;
+  document.getElementById("modal-root").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("modal-root").classList.remove("open");
+}
+
+/* ── UTILS ── */
+function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+init();
+</script>
+</body>
+</html>
