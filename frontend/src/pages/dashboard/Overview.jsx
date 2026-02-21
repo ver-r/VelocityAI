@@ -1,25 +1,32 @@
-
-import { useAuth } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "../../services/api";
 
 export default function Overview() {
   const [data, setData] = useState(null);
-  const { getToken } = useAuth();
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    const load = async () => {
-      const token = await getToken();
-      const result = await fetchWithAuth("/api/users/me", token);
-      setData(result);
-    };
+    fetchWithAuth("/api/users/me")
+      .then(setData)
+      .catch((err) => {
+        console.error(err);
+        setError(true);
+      });
+  }, []);
 
-    load().catch(console.error);
-  }, [getToken]);
+  if (error) {
+    return <p style={{ color: "red" }}>Failed to load snapshot.</p>;
+  }
 
-  if (!data) return <p>Loading snapshot…</p>;
+  if (!data) {
+    return <p>Loading snapshot…</p>;
+  }
 
-  const { readiness, role } = data;
+  const {
+    readiness = 0,
+    role = "Unknown role",
+    skills = [],
+  } = data;
 
   const resilienceLabel =
     readiness >= 75
@@ -31,10 +38,12 @@ export default function Overview() {
   return (
     <>
       <p style={eyebrow}>CAREER SNAPSHOT</p>
+
       <h1 style={title}>
         Keerat, your career path is{" "}
         <span style={highlight}>{resilienceLabel}</span>
       </h1>
+
       <p style={subtitle}>
         Based on your skills and current market signals for{" "}
         <strong>{role}</strong>
@@ -44,19 +53,25 @@ export default function Overview() {
         <div style={card}>
           <h3>Career Readiness</h3>
           <div style={ring}>{readiness}%</div>
-          <p style={muted}>You outperform 62% of peers</p>
+          <p style={muted}>
+            Based on {skills.length} selected skills
+          </p>
         </div>
 
         <div style={card}>
-          <h3>What’s working in your favor</h3>
-          <Pill title="Docker" desc="Production-ready containerization" />
-          <Pill title="PostgreSQL" desc="Strong relational modeling" />
-          <Pill title="REST APIs" desc="Backend integration standard" />
+          <h3>Your current skills</h3>
+          {skills.length === 0 ? (
+            <p style={muted}>No skills selected yet</p>
+          ) : (
+            skills.slice(0, 6).map((skill) => (
+              <Pill key={skill} title={skill} />
+            ))
+          )}
         </div>
       </div>
 
       <div style={{ marginTop: "3.5rem" }}>
-        <h3>What’s holding you back</h3>
+        <h3>Next improvement areas</h3>
         <Weak title="System Design" />
         <Weak title="Cloud Architecture" />
         <Weak title="Distributed Systems" />
@@ -71,11 +86,12 @@ export default function Overview() {
   );
 }
 
-function Pill({ title, desc }) {
+/* ===== SMALL COMPONENTS ===== */
+
+function Pill({ title }) {
   return (
     <div style={pill}>
       <strong>{title}</strong>
-      <div style={muted}>{desc}</div>
     </div>
   );
 }
@@ -84,7 +100,7 @@ function Weak({ title }) {
   return <div style={weak}>{title}</div>;
 }
 
-/* STYLES */
+/* ===== STYLES ===== */
 
 const eyebrow = {
   color: "#3B82F6",
@@ -134,10 +150,12 @@ const muted = {
 };
 
 const pill = {
-  marginTop: "1rem",
-  padding: "0.8rem",
-  borderRadius: "14px",
-  border: "1px solid rgba(16,185,129,0.5)",
+  marginTop: "0.6rem",
+  padding: "0.6rem 1rem",
+  borderRadius: "999px",
+  border: "1px solid rgba(59,130,246,0.5)",
+  display: "inline-block",
+  marginRight: "0.5rem",
 };
 
 const weak = {

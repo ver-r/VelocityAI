@@ -1,18 +1,14 @@
 export const fetchWithAuth = async (url, options = {}) => {
-  const token = await window.Clerk?.session?.getToken();
+  const token = await window.Clerk.session.getToken();
 
   const res = await fetch(`http://localhost:5000${url}`, {
-    ...options,
+    method: options.method || "GET",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
-      ...options.headers,
     },
+    body: options.body,
   });
 
-  if (!res.ok) {
-    throw new Error("API request failed");
-  }
-
-  return res.json();
+  return await res.json();
 };

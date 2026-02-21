@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import userRoutes from "./routes/user.routes.js";
+import quizRoutes from "./routes/quiz.routes.js";
 
 const app = express();
 
@@ -19,4 +20,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/users", userRoutes);
+app.use("/api/quiz", quizRoutes);
+
 export default app;
+
