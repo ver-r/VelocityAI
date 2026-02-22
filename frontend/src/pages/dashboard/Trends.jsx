@@ -1,46 +1,116 @@
+import { useEffect, useState } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
 export default function Trends() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/trends")
+      .then((res) => res.json())
+      .then(setData)
+      .catch(console.error);
+  }, []);
+
+  if (!data) return <p>Loading market signals…</p>;
+
+  const growing = data.top_growing_skills.slice(0, 5).map((s) => ({
+    name: s.skill,
+    risk: +(s.decline_risk_probability * 100).toFixed(1),
+  }));
+
+  const declining = data.top_declining_skills.slice(0, 5).map((s) => ({
+    name: s.skill,
+    risk: +(s.decline_risk_probability * 100).toFixed(1),
+  }));
+
   return (
-    <>
+    <div style={{ width: "100%", flex: 1 }}>
       <p style={eyebrow}>MARKET SIGNALS</p>
-      <h1 style={title}>Where the industry is heading</h1>
-      <p style={subtitle}>
-        Signals shaping backend engineering roles over the next 3–5 years.
-      </p>
 
-      <div style={stack}>
-        <TrendCard
-          title="Cloud-first is non-negotiable"
-          desc="Most backend roles now assume comfort with distributed cloud systems."
-          strength="Strong signal"
-        />
+      <h1 style={title}>Industry Momentum</h1>
 
-        <TrendCard
-          title="System design is baseline"
-          desc="Hiring loops increasingly filter candidates on architectural thinking."
-          strength="Very strong signal"
-        />
-
-        <TrendCard
-          title="AI augments backend engineers"
-          desc="AI speeds up delivery, but architectural judgment remains human-led."
-          strength="Emerging signal"
-        />
+      {/* Market Stability */}
+      <div style={{ ...card, width: "100%" }}>
+        <h3>Market Stability Index</h3>
+        <div style={indexNumber}>
+          {(data.market_stability_index * 100).toFixed(2)}%
+        </div>
+        <p style={muted}>
+          Overall resilience of the current skill ecosystem
+        </p>
       </div>
-    </>
-  );
-}
 
-function TrendCard({ title, desc, strength }) {
-  return (
-    <div style={card}>
-      <div style={strengthTag}>{strength}</div>
-      <h3 style={{ marginTop: "0.6rem" }}>{title}</h3>
-      <p style={descText}>{desc}</p>
+      {/* Growing Skills */}
+      <div style={{ marginTop: "3rem", width: "100%" }}>
+        <h3>Top Growing Skills</h3>
+
+        <div style={{ ...card, width: "100%" }}>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={growing}>
+              <XAxis
+                dataKey="name"
+                tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                axisLine={{ stroke: "#374151" }}
+                angle={-30}
+                textAnchor="end"
+              />
+              <YAxis
+                tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                axisLine={{ stroke: "#374151" }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#111827",
+                  border: "1px solid #374151",
+                }}
+              />
+              <Bar dataKey="risk" fill="#10B981" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* High Risk Skills */}
+      <div style={{ marginTop: "3rem", width: "100%" }}>
+        <h3>High Risk Skills</h3>
+
+        <div style={{ ...card, width: "100%" }}>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={declining}>
+              <XAxis
+                dataKey="name"
+                tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                axisLine={{ stroke: "#374151" }}
+                angle={-30}
+                textAnchor="end"
+              />
+              <YAxis
+                tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                axisLine={{ stroke: "#374151" }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#111827",
+                  border: "1px solid #374151",
+                }}
+              />
+              <Bar dataKey="risk" fill="#EF4444" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* STYLES */
+/* ================= STYLES ================= */
 
 const eyebrow = {
   color: "#3B82F6",
@@ -49,40 +119,27 @@ const eyebrow = {
 };
 
 const title = {
-  fontSize: "2.4rem",
+  fontSize: "2.6rem",
   marginTop: "0.8rem",
 };
 
-const subtitle = {
-  marginTop: "0.6rem",
-  color: "#9CA3AF",
-  maxWidth: "640px",
-};
-
-const stack = {
-  marginTop: "3rem",
-  display: "flex",
-  flexDirection: "column",
-  gap: "1.8rem",
-};
-
 const card = {
-  padding: "2rem",
+  marginTop: "1.5rem",
+  padding: "2.2rem",
   borderRadius: "22px",
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(59,130,246,0.35)",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+  border: "1px solid rgba(255,255,255,0.12)",
+  boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
 };
 
-const strengthTag = {
-  display: "inline-block",
-  padding: "0.35rem 0.8rem",
-  borderRadius: "999px",
-  fontSize: "0.75rem",
-  background: "rgba(59,130,246,0.18)",
-  border: "1px solid rgba(59,130,246,0.5)",
-};
-
-const descText = {
+const indexNumber = {
+  fontSize: "2.4rem",
+  fontWeight: 700,
   marginTop: "0.6rem",
+};
+
+const muted = {
+  marginTop: "0.4rem",
   color: "#9CA3AF",
 };
