@@ -226,5 +226,4 @@ if __name__ == "__main__":
     print(f"\n  Roadmap API running at http://localhost:{PORT}")
     print(f"  Example: http://localhost:{PORT}/viewer?role=Front+End+Developer&known=HTML,CSS\n")
 
-  import os
-  app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+  app.run(port=PORT, debug=True)
