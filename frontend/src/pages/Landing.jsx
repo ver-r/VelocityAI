@@ -1,3 +1,4 @@
+import logo from "../assets/logo.svg";
 import { useNavigate } from "react-router-dom";
 import {
   SignedIn,
@@ -49,6 +50,8 @@ export default function Landing() {
         >
           <GlowBackground />
 
+
+
           <div
             style={{
               position: "relative",
@@ -59,6 +62,17 @@ export default function Landing() {
               textAlign: "center",
             }}
           >
+            {/* Logo */}
+            <img
+              src={logo}
+                alt="Velocity Logo"
+                style={{
+                width: "70px",
+                marginBottom: "1.5rem",
+                opacity: 0.95,
+              }}
+            />
+            
             {/* Top Label */}
             <p
               style={{
