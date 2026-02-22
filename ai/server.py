@@ -164,3 +164,64 @@ def analyze(user_input: UserInput):
 @app.get("/health")
 def health():
     return {"status": "AI service running 🚀"}
+
+@app.get("/market-trends")
+def market_trends():
+
+    all_results = []
+
+    model_features = scaler.feature_names_in_
+
+    for _, row in features_df.iterrows():
+
+        X_df = pd.DataFrame(
+            [row[model_features].values],
+            columns=model_features
+        )
+
+        X_scaled = scaler.transform(X_df)
+        prob = risk_model.predict_proba(X_scaled)[0][1]
+
+        all_results.append({
+            "skill": row["skill"],
+            "decline_risk_probability": float(prob)
+        })
+
+    trends_df = pd.DataFrame(all_results)
+
+    # Sort ascending = growing
+    top_growing = trends_df.sort_values(
+        "decline_risk_probability"
+    ).head(5)
+
+    # Sort descending = declining
+    top_declining = trends_df.sort_values(
+        "decline_risk_probability",
+        ascending=False
+    ).head(5)
+
+    # Market Stability Index
+    stability_index = float(
+        1 - trends_df["decline_risk_probability"].mean()
+    )
+
+    # Risk Buckets
+    low = len(trends_df[trends_df["decline_risk_probability"] < 0.33])
+    medium = len(
+        trends_df[
+            (trends_df["decline_risk_probability"] >= 0.33) &
+            (trends_df["decline_risk_probability"] < 0.66)
+        ]
+    )
+    high = len(trends_df[trends_df["decline_risk_probability"] >= 0.66])
+
+    return {
+        "top_growing_skills": top_growing.to_dict(orient="records"),
+        "top_declining_skills": top_declining.to_dict(orient="records"),
+        "market_stability_index": stability_index,
+        "risk_distribution": {
+            "low": low,
+            "medium": medium,
+            "high": high
+        }
+    }

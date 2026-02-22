@@ -1,3 +1,10 @@
 pandas
 requests
 tqdm
+flask
+numpy
+sentence_transformers
+uvicorn
+scikit-learn
+flask_cors
+fastapi
