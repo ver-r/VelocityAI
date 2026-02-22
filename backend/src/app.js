@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import userRoutes from "./routes/user.routes.js";
 import quizRoutes from "./routes/quiz.routes.js";
-
+import trendsRoutes from "./routes/trends.routes.js";
 const app = express();
 
 /* Middleware */
@@ -21,6 +21,6 @@ app.get("/", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/quiz", quizRoutes);
-
+app.use("/api/trends", trendsRoutes);
 export default app;
 
