@@ -149,16 +149,30 @@ export default function Quiz() {
         rightLabel="Finish →"
         onRight={async () => {
           try {
-            await fetchWithAuth("/api/quiz/submit", {
+            console.log("Submitting quiz with:", {
+              skills: selectedSkills,
+              role: selectedRole,
+            });
+            
+            const response = await fetchWithAuth("/api/quiz/submit", {
               method: "POST",
               body: JSON.stringify({
                 skills: selectedSkills,
                 role: selectedRole,
               }),
             });
+            
+            console.log("Quiz response:", response);
+            
+            if (response.message && response.message.includes("failed")) {
+              alert("Quiz submission failed: " + response.message);
+              return;
+            }
+            
             navigate("/dashboard");
           } catch (err) {
             console.error("Quiz submit failed", err);
+            alert("Error submitting quiz. Check console for details.");
           }
         }}
       />

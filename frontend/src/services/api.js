@@ -10,5 +10,10 @@ export const fetchWithAuth = async (url, options = {}) => {
     body: options.body,
   });
 
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
+  }
+
   return await res.json();
 };

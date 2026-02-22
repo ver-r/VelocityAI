@@ -17,21 +17,37 @@ router.post("/submit", requireAuth, async (req, res) => {
     /* 1️⃣ Convert skills → AI input */
     const skillText = skills.join(", ");
 
+    console.log("🔍 Calling AI service with:", skillText);
+
     /* 2️⃣ Call AI service */
-    const aiResponse = await fetch(
-      `${process.env.AI_SERVICE_URL}/analyze`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: skillText }),
+    let aiData = null;
+    try {
+      const aiResponse = await fetch(
+        `${process.env.AI_SERVICE_URL}/analyze`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: skillText }),
+        }
+      );
+
+      if (!aiResponse.ok) {
+        console.error("❌ AI service returned error:", aiResponse.status);
+        throw new Error(`AI service returned ${aiResponse.status}`);
       }
-    );
 
-    if (!aiResponse.ok) {
-      throw new Error("AI service failed");
+      aiData = await aiResponse.json();
+      console.log("✅ AI service response received");
+    } catch (aiError) {
+      console.error("❌ AI service error:", aiError.message);
+      // Continue without AI data instead of failing completely
+      aiData = {
+        matched_roles: [],
+        skill_decline_risk: [],
+        role_decline_analysis: [],
+        error: "AI service unavailable"
+      };
     }
-
-    const aiData = await aiResponse.json();
 
     /* 3️⃣ Compute readiness (temporary logic) */
     const readiness = Math.min(100, skills.length * 10);
@@ -48,14 +64,16 @@ router.post("/submit", requireAuth, async (req, res) => {
       { new: true, upsert: true }
     );
 
+    console.log("✅ User data saved successfully");
+
     /* 5️⃣ Return enriched response */
     res.json({
       user,
       aiInsights: aiData,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Quiz processing failed" });
+    console.error("❌ Quiz processing failed:", err);
+    res.status(500).json({ message: "Quiz processing failed", error: err.message });
   }
 });
 
