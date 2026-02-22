@@ -7,7 +7,6 @@ import Quiz from "./pages/Quiz";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Overview from "./pages/dashboard/Overview";
 import Trends from "./pages/dashboard/Trends";
-import LearningPath from "./pages/dashboard/LearningPath";
 
 export default function App() {
   return (
@@ -29,7 +28,6 @@ export default function App() {
       >
         <Route index element={<Overview />} />
         <Route path="trends" element={<Trends />} />
-        <Route path="path" element={<LearningPath />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

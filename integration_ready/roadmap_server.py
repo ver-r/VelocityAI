@@ -15,7 +15,7 @@ from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
 
 # ── CONFIG ──────────────────────────────────────────────────────────────────
-REPO_PATH = r"E:\VelocityAI\integration_ready\developer-roadmap"
+REPO_PATH = r"D:\velocity\integration_ready\developer-roadmap"
 PORT      = 5050
 # ────────────────────────────────────────────────────────────────────────────
 

@@ -20,14 +20,14 @@ export default function Landing() {
       <ClerkLoading>
         <div
           style={{
+            flex: 1,
             minHeight: "100vh",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "white",
-            background: "var(--bg-primary)",
-            fontSize: "1rem",
-            letterSpacing: "0.08em",
+            fontSize: "0.9rem",
+            letterSpacing: "0.12em",
+            color: "var(--text-secondary)",
           }}
         >
           Initializing career intelligence…
@@ -38,13 +38,13 @@ export default function Landing() {
       <ClerkLoaded>
         <div
           style={{
+            flex: 1,
             minHeight: "100vh",
-            background: "var(--bg-primary)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             position: "relative",
-            overflow: "hidden",
+            padding: "4rem 2rem",
           }}
         >
           <GlowBackground />
@@ -54,33 +54,35 @@ export default function Landing() {
               position: "relative",
               zIndex: 10,
               width: "100%",
-              maxWidth: "1000px",
-              padding: "0 2rem",
+              maxWidth: "1100px",
+              margin: "0 auto",
               textAlign: "center",
-              transform: "translateY(-3vh)",
             }}
           >
-            {/* Top label */}
+            {/* Top Label */}
             <p
               style={{
+                fontSize: "0.7rem",
+                letterSpacing: "0.4em",
                 color: "var(--accent-blue)",
-                letterSpacing: "0.3em",
-                fontSize: "0.75rem",
-                marginBottom: "1.25rem",
+                marginBottom: "2rem",
+                opacity: 0.9,
               }}
             >
               AI • CAREER • FUTURE
             </p>
 
             {/* Headline */}
-            <h1 style={{headlineStyle, animation: "fadeUp 0.6s ease both"}}>
+            <h1 style={headlineStyle}>
               {isSignedIn ? (
                 <>
-                Hello,{" "}
-                <span style={highlight}>
-                  {user?.firstName || "there"}</span>{" "}👋
-                <br />
-                Ready to future-proof your career?
+                  Hello{" "}
+                  <span style={highlight}>
+                    {user?.firstName || "there"}
+                  </span>{" "}
+                  👋
+                  <br />
+                  Ready to future-proof your career?
                 </>
               ) : (
                 "Future-Proof Your Career"
@@ -88,21 +90,13 @@ export default function Landing() {
             </h1>
 
             {/* Subtext */}
-            <p
-              style={{
-                fontSize: "1.05rem",
-                color: "var(--text-secondary)",
-                maxWidth: "680px",
-                margin: "0 auto",
-                lineHeight: 1.6,
-              }}
-            >
+            <p style={subTextStyle}>
               Velocity analyzes skill obsolescence, market momentum, and role
               viability to guide you toward careers that actually last.
             </p>
 
             {/* CTA */}
-            <div style={{ marginTop: "2.75rem" }}>
+            <div style={{ marginTop: "3rem" }}>
               <SignedOut>
                 <SignInButton mode="modal">
                   <Button>Start Career Analysis →</Button>
@@ -117,15 +111,7 @@ export default function Landing() {
             </div>
 
             {/* Stats */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "3.5rem",
-                marginTop: "3.5rem",
-                flexWrap: "wrap",
-              }}
-            >
+            <div style={statsWrapper}>
               <Stat number="2.5 yrs" label="Avg Skill Half-Life" />
               <Stat number="3+" label="Market Signals" />
               <Stat number="AI" label="Risk Forecasting" />
@@ -141,24 +127,9 @@ export default function Landing() {
 
 function Stat({ number, label }) {
   return (
-    <div style={{ textAlign: "center" }}>
-      <div
-        style={{
-          fontSize: "1.6rem",
-          fontWeight: 700,
-          marginBottom: "0.25rem",
-        }}
-      >
-        {number}
-      </div>
-      <div
-        style={{
-          fontSize: "0.85rem",
-          color: "var(--text-secondary)",
-        }}
-      >
-        {label}
-      </div>
+    <div style={statCard}>
+      <div style={statNumber}>{number}</div>
+      <div style={statLabel}>{label}</div>
     </div>
   );
 }
@@ -166,16 +137,50 @@ function Stat({ number, label }) {
 /* ===== STYLES ===== */
 
 const headlineStyle = {
-  fontSize: "3.6rem",
-  fontWeight: 800,
-  lineHeight: 1.15,
-  marginBottom: "1.25rem",
+  fontSize: "clamp(2.5rem, 6vw, 4.8rem)",
+  fontWeight: 900,
+  lineHeight: 1.05,
+  letterSpacing: "-0.03em",
   maxWidth: "900px",
-  marginInline: "auto",
+  margin: "0 auto 1.75rem auto",
+};
+
+const subTextStyle = {
+  fontSize: "clamp(1rem, 1.5vw, 1.2rem)",
+  color: "var(--text-secondary)",
+  maxWidth: "700px",
+  margin: "0 auto",
+  lineHeight: 1.7,
 };
 
 const highlight = {
   background: "linear-gradient(135deg, #3B82F6, #10B981)",
   WebkitBackgroundClip: "text",
   WebkitTextFillColor: "transparent",
+};
+
+const statsWrapper = {
+  marginTop: "4rem",
+  display: "flex",
+  justifyContent: "center",
+  gap: "4rem",
+  flexWrap: "wrap",
+};
+
+const statCard = {
+  textAlign: "center",
+  minWidth: "140px",
+};
+
+const statNumber = {
+  fontSize: "2.25rem",
+  fontWeight: 800,
+  marginBottom: "0.35rem",
+  letterSpacing: "-0.02em",
+};
+
+const statLabel = {
+  fontSize: "0.9rem",
+  color: "var(--text-secondary)",
+  letterSpacing: "0.02em",
 };

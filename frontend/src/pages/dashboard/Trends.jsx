@@ -31,7 +31,9 @@ export default function Trends() {
   }));
 
   return (
-    <div style={{ width: "100%", flex: 1 }}>
+    <div style={{ width: "100%" , display: "flex", flexDirection: 
+      "column", gap: "3.5rem"
+    }}>
       <p style={eyebrow}>MARKET SIGNALS</p>
 
       <h1 style={title}>Industry Momentum</h1>
@@ -112,34 +114,73 @@ export default function Trends() {
 
 /* ================= STYLES ================= */
 
+// const eyebrow = {
+//   color: "#3B82F6",
+//   letterSpacing: "0.25em",
+//   fontSize: "0.75rem",
+// };
+
+// const title = {
+//   fontSize: "2.6rem",
+//   marginTop: "0.8rem",
+// };
+
+// const card = {
+//   marginTop: "1.5rem",
+//   padding: "2.2rem",
+//   borderRadius: "22px",
+//   background:
+//     "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+//   border: "1px solid rgba(255,255,255,0.12)",
+//   boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
+// };
+
+// const indexNumber = {
+//   fontSize: "2.4rem",
+//   fontWeight: 700,
+//   marginTop: "0.6rem",
+// };
+
+// const muted = {
+//   marginTop: "0.4rem",
+//   color: "#9CA3AF",
+// };
+
+
+/* ===== UPDATED TRENDS STYLES ===== */
+
 const eyebrow = {
   color: "#3B82F6",
-  letterSpacing: "0.25em",
+  letterSpacing: "0.2em",
   fontSize: "0.75rem",
+  marginBottom: "0.6rem",
 };
 
 const title = {
-  fontSize: "2.6rem",
-  marginTop: "0.8rem",
+  fontSize: "2.8rem",
+  marginTop: "0.3rem",
 };
 
 const card = {
-  marginTop: "1.5rem",
-  padding: "2.2rem",
-  borderRadius: "22px",
+  padding: "2.4rem",
+  borderRadius: "20px",
   background:
-    "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
-  border: "1px solid rgba(255,255,255,0.12)",
-  boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
+    "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015))",
+  border: "1px solid rgba(255,255,255,0.08)",
+  backdropFilter: "blur(6px)",
+  boxShadow: "0 25px 70px rgba(0,0,0,0.45)",
 };
 
 const indexNumber = {
-  fontSize: "2.4rem",
+  fontSize: "2.8rem",
   fontWeight: 700,
-  marginTop: "0.6rem",
+  marginTop: "0.8rem",
+  background: "linear-gradient(135deg,#3B82F6,#10B981)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
 };
 
 const muted = {
-  marginTop: "0.4rem",
-  color: "#9CA3AF",
+  marginTop: "0.6rem",
+  color: "#94A3B8",
 };

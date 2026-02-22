@@ -1,5 +1,3 @@
-
-
 import { useAuth } from "@clerk/clerk-react";
 import { fetchWithAuth } from "../services/api";
 import { useMemo, useState } from "react";
@@ -26,31 +24,17 @@ const SKILLS = {
 };
 
 const ROLES = [
-  "Software Engineer",
-  "Front End Developer",
-  "Back End Developer",
-  "Full Stack Developer",
-  "Platform Engineer",
-  "Cloud Engineer",
-  "Cloud Solutions Architect",
-  "DevOps Engineer",
-  "MLOps Engineer",
-  "Data Analyst",
-  "Business Intelligence Analyst",
-  "Data Scientist",
-  "Machine Learning Engineer",
-  "Artificial Intelligence Engineer",
-  "Cybersecurity Analyst",
-  "Network Security Engineer",
-  "UX Designer",
-  "Product Manager",
-  "Game Developer"
+  "Software Engineer","Front End Developer","Back End Developer",
+  "Full Stack Developer","Platform Engineer","Cloud Engineer",
+  "Cloud Solutions Architect","DevOps Engineer","MLOps Engineer",
+  "Data Analyst","Business Intelligence Analyst","Data Scientist",
+  "Machine Learning Engineer","Artificial Intelligence Engineer",
+  "Cybersecurity Analyst","Network Security Engineer","UX Designer",
+  "Product Manager","Game Developer"
 ];
 
-
 export default function Quiz() {
-  const navigate = useNavigate(); // ✅ CORRECT PLACE
-  
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [skillSearch, setSkillSearch] = useState("");
@@ -80,8 +64,6 @@ export default function Quiz() {
     );
   };
 
-  /* ================= STEP 1 ================= */
-
   if (step === 1) {
     return (
       <Page step={1}>
@@ -97,7 +79,7 @@ export default function Quiz() {
           placeholder="Search skills..."
         />
 
-        <div style={{ marginTop: "2rem" }}>
+        <div style={{ marginTop: "2.5rem" }}>
           {Object.entries(filteredSkills).map(([category, skills]) => (
             <Card key={category} title={category}>
               <div style={badgeWrap}>
@@ -123,8 +105,6 @@ export default function Quiz() {
       </Page>
     );
   }
-
-  /* ================= STEP 2 ================= */
 
   return (
     <Page step={2}>
@@ -153,8 +133,8 @@ export default function Quiz() {
                   : "1px solid rgba(255,255,255,0.08)",
               background:
                 selectedRole === role
-                  ? "linear-gradient(180deg, rgba(59,130,246,0.18), rgba(15,23,42,0.9))"
-                  : "#0f172a"
+                  ? "linear-gradient(180deg, rgba(59,130,246,0.22), rgba(11,15,25,0.95))"
+                  : "rgba(15,23,42,0.75)"
             }}
           >
             {role}
@@ -168,20 +148,19 @@ export default function Quiz() {
         rightDisabled={!selectedRole}
         rightLabel="Finish →"
         onRight={async () => {
-        try {
-          await fetchWithAuth("/api/quiz/submit", {
-            method: "POST",
-            body: JSON.stringify({
-              skills: selectedSkills,
-              role: selectedRole,
-            }),
-          });
-
-          navigate("/dashboard");
-        } catch (err) {
-          console.error("Quiz submit failed", err);
-        }
-      }}
+          try {
+            await fetchWithAuth("/api/quiz/submit", {
+              method: "POST",
+              body: JSON.stringify({
+                skills: selectedSkills,
+                role: selectedRole,
+              }),
+            });
+            navigate("/dashboard");
+          } catch (err) {
+            console.error("Quiz submit failed", err);
+          }
+        }}
       />
     </Page>
   );
@@ -191,21 +170,31 @@ export default function Quiz() {
 
 function Page({ children, step }) {
   const backgrounds = {
-    1: "radial-gradient(1200px 600px at 20% 10%, rgba(59,130,246,0.18), transparent 60%), #0b0f19",
-    2: "radial-gradient(1200px 600px at 80% 15%, rgba(99,102,241,0.18), transparent 60%), #0b0f19",
+    1: `
+      radial-gradient(1400px 800px at 20% -10%, rgba(59,130,246,0.25), transparent 70%),
+      radial-gradient(1000px 700px at 80% 110%, rgba(16,185,129,0.18), transparent 70%),
+      #0b0f19
+    `,
+    2: `
+      radial-gradient(1400px 800px at 80% -10%, rgba(99,102,241,0.28), transparent 70%),
+      radial-gradient(1000px 700px at 20% 110%, rgba(59,130,246,0.18), transparent 70%),
+      #0b0f19
+    `,
   };
 
   return (
     <div
       style={{
+        flex: 1,
         minHeight: "100vh",
-        padding: "5rem 4rem",
-        color: "white",
+        padding: "4rem 2rem 6rem",
         background: backgrounds[step],
+        display: "flex",
+        justifyContent: "center",
         transition: "background 0.6s ease",
       }}
     >
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={pageContainer}>
         {children}
       </div>
     </div>
@@ -214,14 +203,14 @@ function Page({ children, step }) {
 
 function Header({ step, title, subtitle }) {
   return (
-    <div>
-      <p style={{ color: "var(--accent-blue)", letterSpacing: "0.2em" }}>
+    <div style={{ marginBottom: "2.5rem" }}>
+      <p style={{ color: "var(--accent-blue)", letterSpacing: "0.25em", fontSize: "0.7rem" }}>
         {step}
       </p>
-      <h1 style={{ fontSize: "2.6rem", marginTop: "0.6rem" }}>
+      <h1 style={{ fontSize: "2.4rem", marginTop: "0.75rem", fontWeight: 800 }}>
         {title}
       </h1>
-      <p style={{ color: "var(--text-secondary)", marginTop: "0.6rem" }}>
+      <p style={{ color: "var(--text-secondary)", marginTop: "0.6rem", maxWidth: "600px" }}>
         {subtitle}
       </p>
     </div>
@@ -234,17 +223,7 @@ function SearchInput({ value, onChange, placeholder }) {
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      style={{
-        width: "100%",
-        maxWidth: "500px",
-        marginTop: "2rem",
-        padding: "0.9rem 1rem",
-        borderRadius: "12px",
-        border: "1px solid rgba(255,255,255,0.12)",
-        background: "#0f172a",
-        color: "white",
-        outline: "none"
-      }}
+      style={searchInput}
     />
   );
 }
@@ -258,14 +237,7 @@ function Footer({
   rightDisabled
 }) {
   return (
-    <div
-      style={{
-        marginTop: "5rem",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }}
-    >
+    <div style={footer}>
       {leftLabel ? (
         <button style={ghostBtn} onClick={onLeft}>
           {leftLabel}
@@ -279,7 +251,7 @@ function Footer({
         onClick={onRight}
         style={{
           ...primaryBtn,
-          opacity: rightDisabled ? 0.5 : 1,
+          opacity: rightDisabled ? 0.45 : 1,
           cursor: rightDisabled ? "not-allowed" : "pointer"
         }}
       >
@@ -291,6 +263,11 @@ function Footer({
 
 /* ================= STYLES ================= */
 
+const pageContainer = {
+  width: "100%",
+  maxWidth: "1100px",
+};
+
 const badgeWrap = {
   display: "flex",
   flexWrap: "wrap",
@@ -301,31 +278,50 @@ const badgeWrap = {
 const roleGrid = {
   marginTop: "3rem",
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
   gap: "1.4rem"
 };
 
 const roleCard = {
   padding: "1.6rem",
   borderRadius: "18px",
-  background: "#0f172a",
   cursor: "pointer",
-  transition: "all 0.2s ease"
+  transition: "all 0.25s ease",
+  backdropFilter: "blur(6px)",
+};
+
+const searchInput = {
+  width: "100%",
+  maxWidth: "520px",
+  marginTop: "1.8rem",
+  padding: "0.95rem 1.1rem",
+  borderRadius: "14px",
+  border: "1px solid rgba(255,255,255,0.12)",
+  background: "rgba(15,23,42,0.8)",
+  color: "white",
+  outline: "none",
+};
+
+const footer = {
+  marginTop: "5rem",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
 };
 
 const primaryBtn = {
-  padding: "0.85rem 1.8rem",
+  padding: "0.9rem 2rem",
   borderRadius: "999px",
   border: "none",
   fontWeight: 600,
   background: "linear-gradient(135deg, #3B82F6, #10B981)",
-  color: "#0b0f19"
+  color: "#0b0f19",
 };
 
 const ghostBtn = {
   background: "transparent",
   color: "white",
-  border: "1px solid rgba(255,255,255,0.15)",
-  padding: "0.6rem 1.3rem",
-  borderRadius: "999px"
+  border: "1px solid rgba(255,255,255,0.18)",
+  padding: "0.6rem 1.4rem",
+  borderRadius: "999px",
 };
